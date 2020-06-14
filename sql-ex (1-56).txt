@@ -1,0 +1,508 @@
+1. Найдите номер модели, скорость и размер жесткого диска для всех ПК стоимостью менее 500 дол. Вывести: model, speed и hd
+
+With test as 
+(Select * from Product
+inner join PC on Product.model = PC.model)
+select distinct PC.model, PC.speed, PC.hd
+from PC,test
+where PC.price<500
+
+2. Найдите производителей принтеров. Вывести: maker
+
+Select distinct maker
+from Product
+where type = 'Printer'
+
+3. Найдите номер модели, объем памяти и размеры экранов ПК-блокнотов, цена которых превышает 1000 дол.
+
+Select Product.model, ram, screen from Product
+inner join Laptop on Product.model = Laptop.model
+where price>1000
+
+4. Найдите все записи таблицы Printer для цветных принтеров.
+
+Select * from Printer
+where color = 'y'
+
+5. Найдите номер модели, скорость и размер жесткого диска ПК, имеющих 12x или 24x CD и цену менее 600 дол.
+
+Select model,speed,hd from PC
+where (cd='12x' or cd='24x') and price<600
+
+6. Для каждого производителя, выпускающего ПК-блокноты c объёмом жесткого диска не менее 10 Гбайт, найти скорости таких ПК-блокнотов. Вывод: производитель, скорость.
+
+Select distinct maker, speed from Product
+right join Laptop on Product.model = Laptop.model
+where hd>=10 and type = 'Laptop'
+
+7. Найдите номера моделей и цены всех имеющихся в продаже продуктов (любого типа) производителя B (латинская буква).
+
+SELECT distinct PC.model, price
+FROM PC
+inner join Product on PC.model = Product.model
+where maker = 'B'
+Union
+SELECT distinct Laptop.model, price
+FROM Laptop
+inner join Product on Laptop.model = Product.model
+where maker = 'B'
+Union
+SELECT distinct Printer.model, price
+FROM Printer
+inner join Product on Printer.model = Product.model
+where maker = 'B'
+
+8. Найдите производителя, выпускающего ПК, но не ПК-блокноты.
+
+Select distinct maker from product
+where type = 'PC' and maker NOT IN (SELECT maker
+ FROM product 
+ WHERE type = 'Laptop')
+
+9. Найдите производителей ПК с процессором не менее 450 Мгц. Вывести: Maker
+
+Select distinct maker from Product
+inner join PC on Product.model=PC.model
+where speed>=450
+
+10. Найдите модели принтеров, имеющих самую высокую цену. Вывести: model, price
+
+select model, price from Printer
+where price in (select max(price) as max_price from Printer)
+
+11. Найдите среднюю скорость ПК.
+
+Select avg(speed) from PC
+
+12. Найдите среднюю скорость ПК-блокнотов, цена которых превышает 1000 дол.
+
+Select avg(speed) from Laptop
+where price>1000
+
+13. Найдите среднюю скорость ПК, выпущенных производителем A.
+
+Select avg(speed) from PC
+inner join Product on PC.model = Product.model
+where maker = 'A'
+
+14. Найдите класс, имя и страну для кораблей из таблицы Ships, имеющих не менее 10 орудий.
+
+Select Classes.class,name,country from Classes
+inner join Ships on Classes.class=Ships.class
+where numGuns>=10
+
+15. Найдите размеры жестких дисков, совпадающих у двух и более PC. Вывести: HD
+
+with test as
+(Select hd, count(model) as c_model from PC
+group by hd)
+select hd from test where c_model>=2
+
+16. Найдите пары моделей PC, имеющих одинаковые скорость и RAM. В результате каждая пара указывается только один раз, т.е. (i,j), но не (j,i), Порядок вывода: модель с большим номером, модель с меньшим номером, скорость и RAM.
+
+with test as (Select distinct model, ram, speed from PC)
+select distinct test.model, PC.model, PC.speed, PC.ram from test
+inner join PC on test.speed = PC.speed and test.ram=PC.ram
+where test.model> PC.model
+
+17. Найдите модели ПК-блокнотов, скорость которых меньше скорости каждого из ПК.
+Вывести: type, model, speed
+
+select distinct type,  Laptop.model,speed from Laptop
+inner join Product on Laptop.model = Product.model
+where speed < any (Select min(speed) as min from PC)
+
+18. Найдите производителей самых дешевых цветных принтеров. Вывести: maker, price
+
+select distinct maker, price from printer
+inner join Product on Printer.model = Product.model
+where color = 'y' and price = any (select min(price) as min from Printer where color = 'y')
+
+19. Для каждого производителя, имеющего модели в таблице Laptop, найдите средний размер экрана выпускаемых им ПК-блокнотов.
+Вывести: maker, средний размер экрана.
+
+Select maker, avg(screen) from Laptop
+inner join Product on Laptop.model = Product.model
+group by maker
+
+20. Найдите производителей, выпускающих по меньшей мере три различных модели ПК. Вывести: Maker, число моделей ПК.
+
+with test as
+(Select maker, count(model) as Count_Model from Product 
+where type ='PC' 
+group by maker)
+select * from test where Count_Model>=3
+
+21. Найдите максимальную цену ПК, выпускаемых каждым производителем, у которого есть модели в таблице PC.
+Вывести: maker, максимальная цена.
+
+Select maker, max(price) from PC
+inner join Product on PC.model = Product.model
+group by maker
+
+22. Для каждого значения скорости ПК, превышающего 600 МГц, определите среднюю цену ПК с такой же скоростью. Вывести: speed, средняя цена.
+
+Select speed, avg(price) from PC 
+where speed>600
+group by speed
+
+23. Найдите производителей, которые производили бы как ПК
+со скоростью не менее 750 МГц, так и ПК-блокноты со скоростью не менее 750 МГц.
+Вывести: Maker
+
+with test as 
+(select distinct maker 
+from product 
+where model in (select model 
+ FROM PC 
+ WHERE speed >= 750))
+select maker from test where test.maker in (select maker from Laptop inner join Product on Laptop.model=Product.model where Laptop.speed>=750)
+
+24. Перечислите номера моделей любых типов, имеющих самую высокую цену по всей имеющейся в базе данных продукции.
+
+with test as(
+Select model, price from PC
+UNION
+Select model, price from Laptop
+Union
+Select model, price from Printer)
+select Product.model from test 
+inner join Product on test.model = Product.model
+where test.price in (select max(price) from test)
+
+25. Найдите производителей принтеров, которые производят ПК с наименьшим объемом RAM и с самым быстрым процессором среди всех ПК, имеющих наименьший объем RAM. Вывести: Maker
+
+SELECT distinct maker FROM product INNER JOIN pc ON pc.model=product.model  
+WHERE product.type='PC' AND pc.ram=(SELECT MIN(ram) FROM pc)  
+AND pc.speed = (SELECT MAX(speed) FROM (SELECT distinct speed FROM pc 
+WHERE pc.ram=(SELECT MIN(ram) FROM pc)) as t) 
+AND maker in (select maker from Product where type='Printer')
+
+26. Найдите среднюю цену ПК и ПК-блокнотов, выпущенных производителем A (латинская буква). Вывести: одна общая средняя цена.
+
+with test as
+(Select SUM(price) as p, COUNT(Laptop.code) as c from Laptop
+inner join Product on Laptop.model = Product.model
+where maker = 'A'
+Union
+Select SUM(price) as p, COUNT(PC.code) as c from PC
+inner join Product on PC.model = Product.model
+where maker = 'A')
+select sum(p)/sum(c) from test
+
+27. Найдите средний размер диска ПК каждого из тех производителей, которые выпускают и принтеры. Вывести: maker, средний размер HD.
+
+Select maker, sum(hd)/count(code) as Avg_hd from PC
+inner join Product on PC.model = Product.model
+where maker in (select maker from Product where type = 'Printer')
+group by maker
+
+28. Используя таблицу Product, определить количество производителей, выпускающих по одной модели.
+
+with test as (Select maker, count(type) as qty from Product
+group by maker)
+select count(maker) from test
+where qty=1
+
+29. В предположении, что приход и расход денег на каждом пункте приема фиксируется не чаще одного раза в день [т.е. первичный ключ (пункт, дата)], написать запрос с выходными данными (пункт, дата, приход, расход). Использовать таблицы Income_o и Outcome_o.
+
+with test as (select point, date, inc, null as out from Income_o  
+Union 
+select point, date, null as inc, Outcome_o.out from Outcome_o)
+select point, date, sum(inc) as inc, sum(out) as out from test
+group by point, date
+
+30. В предположении, что приход и расход денег на каждом пункте приема фиксируется произвольное число раз (первичным ключом в таблицах является столбец code), 
+требуется получить таблицу, в которой каждому пункту за каждую дату выполнения операций будет соответствовать одна строка.
+Вывод: point, date, суммарный расход пункта за день (out), суммарный приход пункта за день (inc). Отсутствующие значения считать неопределенными (NULL).
+
+with test as
+(select point, date, SUM(inc) as sum_inc, null as sum_out from Income Group by point, date  
+Union 
+select point, date, null as sum_inc, SUM(out) as sum_out from Outcome Group by point, date)
+select point,date, sum(sum_out), sum(sum_inc) from test
+group by point, date
+
+31. Для классов кораблей, калибр орудий которых не менее 16 дюймов, укажите класс и страну.
+
+Select class, country from Classes
+where bore>=16
+
+32. Одной из характеристик корабля является половина куба калибра его главных орудий (mw). 
+С точностью до 2 десятичных знаков определите среднее значение mw для кораблей каждой страны, у которой есть корабли в базе данных.
+
+with test as
+(select classes.class, ships.name, classes.country, classes.bore  from classes
+join ships on classes.class=ships.class 
+union 
+select Classes.class, Outcomes.ship, Classes.country, Classes.bore from classes 
+join outcomes on classes.class=outcomes.ship)
+select country, cast(avg(power(bore,3)/2) as numeric(6,2)) from test
+group by country
+
+33. Укажите корабли, потопленные в сражениях в Северной Атлантике (North Atlantic). Вывод: ship.
+
+Select ship from Outcomes
+where battle='North Atlantic' and result = 'sunk'
+
+34. По Вашингтонскому международному договору от начала 1922 г. запрещалось строить линейные корабли водоизмещением более 35 тыс.тонн. 
+Укажите корабли, нарушившие этот договор (учитывать только корабли c известным годом спуска на воду).
+Вывести названия кораблей.
+
+Select distinct name from Classes
+inner join Ships on Classes.class = Ships.class
+where launched>=1922 and type = 'bb' and displacement>35000
+
+35. В таблице Product найти модели, которые состоят только из цифр или только из латинских букв (A-Z, без учета регистра).
+Вывод: номер модели, тип модели.
+
+Select distinct model, type from Product
+where model not like '%[^0-9]%' or model not like '%[^a-z]%'
+
+36. Перечислите названия головных кораблей, имеющихся в базе данных (учесть корабли в Outcomes).
+
+Select name from ships
+where name=class 
+union
+select ship as name from outcomes where ship in (select class from classes)
+
+37. Найдите классы, в которые входит только один корабль из базы данных (учесть также корабли в Outcomes).
+
+Select class from
+(select class, name as cnt from ships 
+union  
+select ship, ship as cnt from outcomes
+where ship in (select class from classes)
+group by ship) A
+group by class
+having count(A.cnt)=1
+
+38. Найдите страны, имевшие когда-либо классы обычных боевых кораблей ('bb') и имевшие когда-либо классы крейсеров ('bc').
+
+Select country from Outcomes
+inner join classes on outcomes.ship = classes.class
+where type = 'bb' and country in (Select country from Outcomes
+inner join classes on outcomes.ship = classes.class
+where type = 'bc')
+union
+select country from classes where type = 'bc' and country in (select country from classes where type = 'bb')
+
+39. Найдите корабли, `сохранившиеся для будущих сражений`; т.е. выведенные из строя в одной битве (damaged), они участвовали в другой, произошедшей позже.
+
+Select distinct A.ship from 
+(select * from outcomes inner join battles on outcomes.battle = battles.name
+where result = 'damaged') as A
+inner join (select * from outcomes inner join battles on outcomes.battle = battles.name) as B on A.ship=B.ship where A.date<B.date
+
+40. Найти производителей, которые выпускают более одной модели, при этом все выпускаемые производителем модели являются продуктами одного типа.
+Вывести: maker, type
+
+with test as
+(Select maker, type, count(model) as cnt_model
+from product
+group by maker, type) 
+Select A.maker,A.type from test as A
+inner join (select maker, count(maker) as cnt_maker from
+(select maker,type, count(type) as cnt from Product group by maker, type) H
+group by maker) as B on A.maker=B.maker
+where cnt_maker=1 and cnt_model>1
+
+41. Для каждого производителя, у которого присутствуют модели хотя бы в одной из таблиц PC, Laptop или Printer,
+определить максимальную цену на его продукцию.
+Вывод: имя производителя, если среди цен на продукцию данного производителя присутствует NULL, то выводить для этого производителя NULL,
+иначе максимальную цену.
+
+with test as
+(Select maker, price as max from Product
+inner join PC on Product.model = PC.model
+union
+select maker, price as max from Product
+inner join Laptop on Product.model = Laptop.model
+union
+select maker, price as max from Product
+inner join Printer on Product.model =Printer.model)
+Select distinct maker,max(max) as max from test where max is not null and maker not in (select maker from test where max is null) group by maker 
+union
+select distinct maker, null as max from test where max is null group by maker
+
+42. Найдите названия кораблей, потопленных в сражениях, и название сражения, в котором они были потоплены.
+
+Select ship, battle
+from outcomes
+where result = 'sunk'
+
+43. Укажите сражения, которые произошли в годы, не совпадающие ни с одним из годов спуска кораблей на воду.
+
+select name as y from battles
+where year(date) NOT in (select launched from ships where launched is not null)
+
+44. Найдите названия всех кораблей в базе данных, начинающихся с буквы R.
+
+Select * from
+(Select name from ships
+union
+select ship as name from outcomes) A
+where A.name like 'R%'
+
+45. Найдите названия всех кораблей в базе данных, состоящие из трех и более слов (например, King George V).
+Считать, что слова в названиях разделяются единичными пробелами, и нет концевых пробелов.
+
+Select * from
+(select name from ships
+union
+select ship as name from outcomes) A
+where A.name like '% % %'
+
+46. Для каждого корабля, участвовавшего в сражении при Гвадалканале (Guadalcanal), вывести название, водоизмещение и число орудий.
+
+Select outcomes.ship,displacement, numGuns from
+(select name as ship, numGuns, displacement from ships
+inner join classes on ships.class = classes.class
+union
+select class as ship, numGuns, displacement from classes) A
+right join outcomes on outcomes.ship = A.ship
+where battle = 'Guadalcanal'
+
+48. Найдите классы кораблей, в которых хотя бы один корабль был потоплен в сражении.
+
+select classes.class from outcomes 
+full join ships on outcomes.ship = ships.name
+full join classes on outcomes.ship = classes.class
+where result = 'sunk' and classes.class is not null
+union
+select ships.class from outcomes 
+full join ships on outcomes.ship = ships.name
+full join classes on outcomes.ship = classes.class
+where result = 'sunk' and ships.class  is not null
+
+49. Найдите названия кораблей с орудиями калибра 16 дюймов (учесть корабли из таблицы Outcomes).
+
+select distinct name from ships
+join classes on ships.class= classes.class
+where bore =16
+union 
+select distinct ship as name from outcomes
+join classes on outcomes.ship= classes.class
+where bore =16
+
+50. Найдите сражения, в которых участвовали корабли класса Kongo из таблицы Ships.
+
+Select distinct battle from ships
+left join outcomes on ships.name = outcomes.ship
+where class ='Kongo' and battle is not null
+
+51. Найдите названия кораблей, имеющих наибольшее число орудий среди всех имеющихся кораблей такого же водоизмещения (учесть корабли из таблицы Outcomes).
+
+with test as
+(select name, displacement, numguns from classes
+inner join ships on classes.class = ships.class
+union
+select class as name, displacement, numguns from classes
+inner join outcomes on classes.class = outcomes.ship)
+select name from test inner join (select displacement, max(numGuns) as m from test group by displacement) as A on test.displacement = A.displacement
+where m = numguns
+
+52. Определить названия всех кораблей из таблицы Ships, которые могут быть линейным японским кораблем,
+имеющим число главных орудий не менее девяти, калибр орудий менее 19 дюймов и водоизмещение не более 65 тыс.тонн
+
+Select name from ships
+inner join classes on ships.class = classes.class
+where country = 'Japan' and type = 'bb' and (numGuns>=9 or numGuns is NULL) and (bore<19 or bore is NULL) and (displacement<=65000 or displacement is NULL)
+
+53. Определите среднее число орудий для классов линейных кораблей.
+Получить результат с точностью до 2-х десятичных знаков.
+
+Select cast(cast(sum(numguns) as numeric(6,2))/cast(count(class) as numeric(6,2)) as numeric(6,2)) from
+(select distinct classes.class, numguns from classes
+full join ships on classes.class = ships.class
+where type = 'bb'
+union
+select distinct classes.class, numguns from classes
+full join outcomes on classes.class = outcomes.ship
+where type = 'bb'
+union
+select distinct classes.class, numguns from classes
+full join ships on classes.class = ships.class
+full join outcomes on ships.name = outcomes.ship
+where type = 'bb') a
+
+54. С точностью до 2-х десятичных знаков определите среднее число орудий всех линейных кораблей (учесть корабли из таблицы Outcomes).
+
+SELECT CAST(AVG(numguns*1.0) AS NUMERIC (6,2)) as AVG from
+(Select type, numguns, name from classes
+right join ships on classes.class = ships.class
+union
+Select type, numguns, outcomes.ship as name from classes
+right join outcomes on classes.class = outcomes.ship) A
+where type = 'bb'
+
+55. Для каждого класса определите год, когда был спущен на воду первый корабль этого класса. 
+Если год спуска на воду головного корабля неизвестен, определите минимальный год спуска на воду кораблей этого класса. 
+Вывести: класс, год.
+
+select * from 
+(Select class, min(launched) as year from ships
+where class!=null
+group by class
+union
+Select class, min(launched) as year from ships
+full join outcomes on outcomes.ship = ships.name
+where class!=null
+group by class
+union
+Select classes.class, min(launched) as year from ships
+full join classes on classes.class = ships.class
+left join outcomes on outcomes.ship = classes.class
+group by classes.class) A
+
+56. Для каждого класса определите число кораблей этого класса, потопленных в сражениях. 
+Вывести: класс и число потопленных кораблей.
+
+select classes.class, count(T.ship) 
+from classes 
+left join(select ship, class from outcomes left join ships on ship=name where result='sunk'union select ship, class from outcomes left join classes on ship=class where result='sunk') as T on classes.class=T.class 
+group by classes.class 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
